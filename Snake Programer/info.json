@@ -1,0 +1,21 @@
+{
+  "Snake Programer": {
+    "nombre": "Snake Programer",
+    "descripcion": "En este juego, controlas una serpiente que, en lugar de comer simples manzanas o frutas, consume "tokens de programación" que van apareciendo en el tablero. Cada token representa un elemento de código (variables, funciones, operadores, etc.) que se va agregando a tu "editor de código" al ser consumido.",
+    "instrucciones": [
+      "Utilizá las flechas del teclado para mover la serpiente en la pantalla.",
+      "Evitá chocar contra los bordes o contra tu propia cola.",
+      "Recogé los tokens de código en el orden correcto para crear programas funcionales.",
+      "Cada token que comes es una pieza de código que se agrega a tu editor.",
+      "Completá cada nivel construyendo la función requerida sin errores.",
+      "Pensá bien el orden: un token en posición incorrecta genera un error de compilación.",
+      "Observá el panel lateral para ver qué función estás construyendo.",
+      "¡La serpiente crece con cada token, haciendo el desafío cada vez mayor!"
+    ],
+    "temas": [
+      "Programación"
+    ],
+	"autor": "Sol Méndez",
+    "url": "https://game.1001problemas.com/juegos/robot-logico/"
+  }
+}
