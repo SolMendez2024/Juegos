@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardianes del Ciberespacio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 2em;
+    }
+    .card {
+      background-color: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: 2em auto;
+    }
+    button {
+      margin: 0.5em;
+      padding: 0.7em 1.2em;
+      font-size: 1em;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #007BFF;
+      color: white;
+    }
+    button:hover:enabled {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    .vidas {
+      font-weight: bold;
+      margin-top: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Guardianes del Ciberespacio</h1>
+  <div id="start-screen" class="card">
+    <p>¡Bienvenido a Guardianes del Ciberespacio! Poné a prueba tus conocimientos sobre ciberseguridad y ayudá a proteger el mundo digital.</p>
+    <button onclick="startGame()">Comenzar</button>
+  </div>
+
+  <div id="game" class="card hidden">
+    <h2 id="level-title"></h2>
+    <p id="question"></p>
+    <div id="answers"></div>
+    <p id="feedback"></p>
+    <p class="vidas">Vidas restantes: <span id="vida">3</span></p>
+    <button id="nextBtn" class="hidden" onclick="nextQuestion()">Siguiente</button>
+  </div>
+
+  <script>
+    const levels = [
+      {
+        title: "Nivel 1 - Correos Electrónicos",
+        questions: [
+          { question: "¿Cuál de los siguientes es un indicio de un correo phishing?", answers: [ { text: "Dirección extraña del remitente", correct: true }, { text: "Asunto con saludo cordial", correct: false }, { text: "Firma profesional", correct: false }, { text: "Enlace a una web conocida", correct: false } ] },
+          { question: "¿Qué deberías hacer si recibís un correo sospechoso?", answers: [ { text: "Hacer clic para revisar", correct: false }, { text: "Responder al remitente", correct: false }, { text: "Eliminarlo sin abrirlo", correct: true }, { text: "Imprimirlo para leer mejor", correct: false } ] },
+          { question: "¿Qué es el 'phishing'?", answers: [ { text: "Suplantación para robar datos", correct: true }, { text: "Un deporte acuático", correct: false }, { text: "Un tipo de virus", correct: false }, { text: "Un programa de antivirus", correct: false } ] },
+          { question: "¿Cómo protegerse del phishing?", answers: [ { text: "Confiando solo en correos bonitos", correct: false }, { text: "Instalando bloqueadores de spam", correct: true }, { text: "Nunca usando el correo", correct: false }, { text: "Mandando respuestas confusas", correct: false } ] },
+          { question: "¿Qué característica puede tener un correo falso?", answers: [ { text: "Errores de ortografía", correct: true }, { text: "Logo original de la empresa", correct: false }, { text: "Texto amigable", correct: false }, { text: "Firma del gerente", correct: false } ] },
+          { question: "¿Qué no se debe hacer ante un correo sospechoso?", answers: [ { text: "Reportarlo", correct: false }, { text: "Ignorarlo", correct: false }, { text: "Abrir los archivos adjuntos", correct: true }, { text: "Eliminarlo", correct: false } ] },
+          { question: "¿Qué hace un enlace de phishing?", answers: [ { text: "Dirige a sitios falsos para robar datos", correct: true }, { text: "Regala premios", correct: false }, { text: "Limpia tu bandeja", correct: false }, { text: "Actualiza tu navegador", correct: false } ] },
+          { question: "¿Quiénes son objetivos comunes del phishing?", answers: [ { text: "Cualquier persona con correo", correct: true }, { text: "Solo políticos", correct: false }, { text: "Solo gamers", correct: false }, { text: "Solo empresas grandes", correct: false } ] },
+          { question: "¿Qué significa que un sitio sea HTTPS?", answers: [ { text: "Es más seguro", correct: true }, { text: "Es más lento", correct: false }, { text: "No tiene imágenes", correct: false }, { text: "No se puede acceder desde móvil", correct: false } ] },
+          { question: "¿Qué herramienta ayuda a detectar correos falsos?", answers: [ { text: "Filtro antispam", correct: true }, { text: "Photoshop", correct: false }, { text: "Editor de texto", correct: false }, { text: "Antivirus solamente", correct: false } ] }
+        ]
+      }
+    ];
+
+    let currentLevel = 0;
+    let currentQuestion = 0;
+    let lives = 3;
+    let answered = false;
+
+    function startGame() {
+      document.getElementById('start-screen').classList.add('hidden');
+      document.getElementById('game').classList.remove('hidden');
+      loadLevel();
+    }
+
+    function loadLevel() {
+      const level = levels[currentLevel];
+      document.getElementById('level-title').textContent = level.title;
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const level = levels[currentLevel];
+      const questionObj = level.questions[currentQuestion];
+      document.getElementById('question').textContent = questionObj.question;
+      const answersDiv = document.getElementById('answers');
+      answersDiv.innerHTML = '';
+      questionObj.answers.forEach(ans => {
+        const btn = document.createElement('button');
+        btn.textContent = ans.text;
+        btn.disabled = false;
+        btn.onclick = () => checkAnswer(ans.correct);
+        answersDiv.appendChild(btn);
+      });
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('nextBtn').classList.add('hidden');
+      answered = false;
+    }
+
+    function checkAnswer(correct) {
+      if (answered) return;
+      answered = true;
+      const feedback = document.getElementById('feedback');
+      const buttons = document.querySelectorAll('#answers button');
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (correct) {
+        feedback.textContent = "¡Correcto!";
+        document.getElementById('nextBtn').classList.remove('hidden');
+      } else {
+        feedback.textContent = "Incorrecto. Perdiste una vida.";
+        lives--;
+        document.getElementById('vida').textContent = lives;
+        if (lives <= 0) {
+          document.getElementById('game').innerHTML = '<h2>Lo siento el juego ha terminado. Te quedaste sin vidas.</h2>';
+        } else {
+          setTimeout(() => {
+            nextQuestion();
+          }, 1500);
+        }
+      }
+    }
+
+    function nextQuestion() {
+      const level = levels[currentLevel];
+      currentQuestion++;
+      if (currentQuestion < level.questions.length) {
+        loadQuestion();
+      } else {
+        currentLevel++;
+        currentQuestion = 0;
+        if (currentLevel < levels.length) {
+          loadLevel();
+        } else {
+          document.getElementById('game').innerHTML = `
+            <h2>¡Felicidades, completaste todos los niveles!</h2>
+            <p>Has demostrado tus conocimientos sobre ciberseguridad.</p>
+            <p><strong>Recomendaciones finales:</strong></p>
+            <ul style="text-align: left">
+              <li>Usá contraseñas seguras y únicas para cada cuenta.</li>
+              <li>No compartas información personal en redes públicas.</li>
+              <li>Mantené tu software actualizado.</li>
+              <li>Usá autenticación en dos pasos cuando sea posible.</li>
+            </ul>
+            <p>¿Querés aprender más? https://www.gub.uy/agencia-gobierno-electronico-sociedad-informacion-conocimiento/ciberseguridad</p>
+          `;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
