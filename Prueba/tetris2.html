@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tetris de Preguntas</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #030303;
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+  }
+  .game-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+  }
+  #game-board {
+    width: 200px;
+    height: 400px;
+    background-color: #363434f6;
+    display: grid;
+    grid-template-columns: repeat(10, 20px);
+    grid-template-rows: repeat(20, 20px);
+    gap: 1px;
+    position: relative;
+  }
+  .cell {
+    width: 20px;
+    height: 20px;
+    background-color: #97979700;
+  }
+  .I { background-color: cyan; }
+  .O { background-color: yellow; }
+  .T { background-color: purple; }
+  .L { background-color: orange; }
+  .game-info {
+    margin-left: 20px;
+    text-align: left;
+  }
+  .question-container,
+  .score-container,
+  .controls {
+    margin-bottom: 20px;
+  }
+  .key {
+    background: #555;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin: 0 2px;
+  }
+  .piece-selection,
+  .game-over {
+    display: none;
+    background: rgba(0, 0, 0, 0.9);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    color: white;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+  }
+  .piece-grid {
+    display: flex;
+    gap: 10px;
+  }
+  .piece-option {
+    width: 60px;
+    height: 60px;
+    background: #444;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    user-select: none;
+  }
+   button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            border-radius: 5px;
+    }
+</style>
+</head>
+<body>
+<h1 class="title">Tetris de Preguntas</h1>
+<div class="game-container">
+  <div id="game-board"></div>
+  <div class="game-info">
+    <div class="question-container">
+      <h2>Pregunta:</h2>
+      <p id="question-text"></p>
+      <div id="answer-container"></div>
+    </div>
+    <div class="score-container">
+      <h3>Puntuación</h3>
+      <p id="score">0</p>
+      <h3>Nivel</h3>
+      <p id="level">1</p>
+      <h3>Líneas</h3>
+      <p id="lines">0</p>
+    </div>
+    <div class="controls">
+      <p><span class="key">←</span> <span class="key">→</span> Mover</p>
+      <p><span class="key">↑</span> Rotar</p>
+      <p><span class="key">↓</span> Bajar rápido</p>
+      <p><span class="key">Espacio</span> Caída instantánea</p>
+    </div>
+  </div>
+</div>
+<button id="start-button">Iniciar Juego</button>
+<div class="piece-selection" id="piece-selection">
+  <h2>¡Respuesta Correcta! Elige tu pieza:</h2>
+  <div class="piece-grid" id="piece-grid"></div>
+</div>
+<div class="game-over" id="game-over">
+  <h2>¡Fin del Juego!</h2>
+  <p>Tu puntuación final: <span id="final-score">0</span></p>
+  <button id="restart-button">Jugar de Nuevo</button>
+</div>
+<script>
+// [Por espacio, se incluirá en la siguiente respuesta el script completo con TODAS las funcionalidades]
+        const boardWidth = 10;
+        const boardHeight = 20;
+        const board = Array.from({ length: boardHeight }, () => Array(boardWidth).fill(null));
+        const gameBoard = document.getElementById("game-board");
+        const questionText = document.getElementById("question-text");
+        const answerContainer = document.getElementById("answer-container");
+        const pieceSelection = document.getElementById("piece-selection");
+        const pieceGrid = document.getElementById("piece-grid");
+        const gameOverScreen = document.getElementById("game-over");
+        const finalScore = document.getElementById("final-score");
+        const scoreDisplay = document.getElementById("score");
+        const linesDisplay = document.getElementById("lines");
+        const levelDisplay = document.getElementById("level");
+
+        const questions = [
+        {
+    question: "¿Qué hace el método 'append' en Python?",
+    answers: ["Agrega un elemento a una lista", "Elimina un elemento", "Ordena la lista", "Convierte a cadena"],
+    correct: 0
+            },
+  {
+    question: "¿Cuál es el operador para la igualdad en Python?",
+    answers: ["=", "==", "!=", "==="],
+    correct: 1
+  },
+  {
+    question: "¿Qué tipo de datos representa True y False?",
+    answers: ["int", "bool", "str", "float"],
+    correct: 1
+  }
+];
+
+const pieces = {
+  I: [[1, 1, 1, 1]],
+  O: [
+    [1, 1],
+    [1, 1]
+  ],
+  T: [
+    [0, 1, 0],
+    [1, 1, 1]
+  ],
+  L: [
+    [1, 0, 0],
+    [1, 1, 1]
+  ]
+};
+
+let activePiece = null;
+let activeX = 3;
+let activeY = 0;
+let gameInterval = null;
+let currentQuestion = null;
+let score = 0;
+let linesCleared = 0;
+let level = 1;
+let fallSpeed = 1000;
+let isPieceActive = false;
+
+function drawBoard() {
+  gameBoard.innerHTML = "";
+  for (let row = 0; row < boardHeight; row++) {
+    for (let col = 0; col < boardWidth; col++) {
+      const cell = document.createElement("div");
+      cell.classList.add("cell");
+      if (board[row][col]) {
+        cell.classList.add(board[row][col]);
+      }
+      gameBoard.appendChild(cell);
+    }
+  }
+
+  if (activePiece) {
+    activePiece.shape.forEach((row, y) => {
+      row.forEach((val, x) => {
+        if (val) {
+          const index = (activeY + y) * boardWidth + (activeX + x);
+          if (index >= 0 && index < boardWidth * boardHeight) {
+            gameBoard.children[index].classList.add(activePiece.name);
+          }
+        }
+      });
+    });
+  }
+}
+
+function checkCollision(piece, x, y) {
+  return piece.shape.some((row, dy) =>
+    row.some((val, dx) => {
+      if (!val) return false;
+      const px = x + dx;
+      const py = y + dy;
+      return px < 0 || px >= boardWidth || py >= boardHeight || (py >= 0 && board[py][px]);
+    })
+  );
+}
+
+function fixPiece() {
+  activePiece.shape.forEach((row, y) => {
+    row.forEach((val, x) => {
+      if (val && activeY + y >= 0) {
+        board[activeY + y][activeX + x] = activePiece.name;
+      }
+    });
+  });
+  clearLines();
+  isPieceActive = false;
+  askQuestion();
+}
+
+function clearLines() {
+  let cleared = 0;
+  for (let y = board.length - 1; y >= 0; y--) {
+    if (board[y].every(cell => cell !== null)) {
+      board.splice(y, 1);
+      board.unshift(Array(boardWidth).fill(null));
+      cleared++;
+      y++;
+    }
+  }
+  if (cleared > 0) {
+    linesCleared += cleared;
+    score += cleared * 100;
+    level = Math.floor(linesCleared / 5) + 1;
+    fallSpeed = Math.max(200, 1000 - (level - 1) * 100);
+    updateInfo();
+  }
+}
+
+function updateInfo() {
+  scoreDisplay.textContent = score;
+  linesDisplay.textContent = linesCleared;
+  levelDisplay.textContent = level;
+}
+
+function drop() {
+  if (isPieceActive) {
+    if (!checkCollision(activePiece, activeX, activeY + 1)) {
+      activeY++;
+    } else {
+      fixPiece();
+    }
+    drawBoard();
+  }
+}
+
+function rotatePiece() {
+  const rotated = activePiece.shape[0].map((_, i) =>
+    activePiece.shape.map(row => row[i]).reverse()
+  );
+  const oldShape = activePiece.shape;
+  activePiece.shape = rotated;
+  if (checkCollision(activePiece, activeX, activeY)) {
+    activePiece.shape = oldShape;
+  }
+}
+
+function movePiece(dx) {
+  if (!checkCollision(activePiece, activeX + dx, activeY)) {
+    activeX += dx;
+  }
+}
+
+function hardDrop() {
+  while (!checkCollision(activePiece, activeX, activeY + 1)) {
+    activeY++;
+  }
+  fixPiece();
+  drawBoard();
+}
+
+function askQuestion() {
+  currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+  questionText.textContent = currentQuestion.question;
+  answerContainer.innerHTML = "";
+  currentQuestion.answers.forEach((answer, index) => {
+    const btn = document.createElement("button");
+    btn.textContent = answer;
+    btn.onclick = () => checkAnswer(index);
+    answerContainer.appendChild(btn);
+  });
+}
+function checkAnswer(index) {
+  if (index === currentQuestion.correct) {
+    showPieceSelection();
+  } else {
+    giveRandomPiece();
+  }
+}
+
+function giveRandomPiece() {
+  const pieceNames = Object.keys(pieces);
+  const randomName = pieceNames[Math.floor(Math.random() * pieceNames.length)];
+  const shape = pieces[randomName].map(row => [...row]);
+  activePiece = { name: randomName, shape };
+  activeX = 3;
+  activeY = 0;
+  isPieceActive = true;
+  drawBoard();
+}
+//function checkAnswer(index) {
+//  if (index === currentQuestion.correct) {
+//    showPieceSelection();
+//  } else {
+//    askQuestion();
+//  }
+//}
+
+function showPieceSelection() {
+  pieceSelection.style.display = "flex";
+  pieceGrid.innerHTML = "";
+  Object.entries(pieces).forEach(([name, shape]) => {
+    const div = document.createElement("div");
+    div.className = `piece-option ${name}`;
+    div.textContent = name;
+    div.onclick = () => {
+      activePiece = { name, shape: shape.map(row => [...row]) };
+      activeX = 3;
+      activeY = 0;
+      isPieceActive = true;
+      pieceSelection.style.display = "none";
+      drawBoard();
+    };
+    pieceGrid.appendChild(div);
+  });
+}
+
+function gameLoop() {
+  if (isPieceActive) drop();
+}
+
+function startGame() {
+  board.forEach(row => row.fill(null));
+  activePiece = null;
+  score = 0;
+  linesCleared = 0;
+  level = 1;
+  fallSpeed = 1000;
+  isPieceActive = false;
+  gameOverScreen.style.display = "none";
+  updateInfo();
+  askQuestion();
+  drawBoard();
+  if (gameInterval) clearInterval(gameInterval);
+  gameInterval = setInterval(gameLoop, fallSpeed);
+}
+
+function endGame() {
+  clearInterval(gameInterval);
+  gameInterval = null;
+  gameOverScreen.style.display = "flex";
+  finalScore.textContent = score;
+}
+
+function checkGameOver() {
+  if (activePiece.shape.some((row, y) =>
+    row.some((val, x) => val && board[activeY + y]?.[activeX + x] !== null)
+  )) {
+    endGame();
+    return true;
+  }
+  return false;
+}
+
+document.addEventListener("keydown", (e) => {
+  if (!isPieceActive) return;
+  if (e.key === "ArrowLeft") movePiece(-1);
+  if (e.key === "ArrowRight") movePiece(1);
+  if (e.key === "ArrowDown") drop();
+  if (e.key === "ArrowUp") rotatePiece();
+  if (e.key === " ") hardDrop();
+  drawBoard();
+});
+
+document.getElementById("start-button").addEventListener("click", startGame);
+document.getElementById("restart-button").addEventListener("click", startGame);
+</script>
+
+</script>
+</body>
+</html>
